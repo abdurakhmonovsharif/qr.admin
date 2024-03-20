@@ -23,7 +23,9 @@ import "./assets/styles/responsive.css";
 import Products from "./pages/Products";
 import Themes from "./pages/Themes";
 import { useEffect } from "react";
-export const base_url = "https://qr-me-backend.onrender.com/api/";
+export const base_url = "http://localhost:8080/api/";
+export const client_base_url = "http://localhost:5173/";
+// https://qr-me-backend.onrender.com/api/
 function App() {
   return (
     <div className="App">

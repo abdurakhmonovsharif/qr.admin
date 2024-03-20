@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Button, Modal, Input, Typography, Select, Table, Space,Spin } from "antd";
+import {
+  Button,
+  Modal,
+  Input,
+  Typography,
+  Select,
+  Table,
+  Space,
+  Spin,
+} from "antd";
 import axios from "axios";
 import { base_url } from "../App";
 const { Option } = Select;
@@ -37,6 +46,7 @@ const Themes = () => {
   };
 
   const handleCancel = () => {
+    setIsEditing(false);
     setIsModalOpen(false);
   };
 
@@ -50,7 +60,9 @@ const Themes = () => {
           await axios.post(base_url + "themes", {
             ...selectedTheme,
             font_family:
-              selectedTheme.font_family === undefined && fontFamilies[0],
+              selectedTheme.font_family === undefined
+                ? fontFamilies[0]
+                : selectedTheme.font_family,
           });
           getThemes();
         } else {

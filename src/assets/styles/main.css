@@ -9,6 +9,10 @@
 =========================================================
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
+.ant-table-cell-fix-right-first {
+  color: red !important;
+  background: #fafafa !important;
+}
 body {
   padding: 0 0 30px 0;
   background-color: #fafafa;

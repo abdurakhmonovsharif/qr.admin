@@ -1,14 +1,3 @@
-/*!
-=========================================================
-* Muse Ant Design Dashboard - v1.0.0
-=========================================================
-* Product Page: https://www.creative-tim.com/product/muse-ant-design-dashboard
-* Copyright 2021 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://github.com/creativetimofficial/muse-ant-design-dashboard/blob/main/LICENSE.md)
-* Coded by Creative Tim
-=========================================================
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
 import {
   Row,
   Col,
@@ -21,14 +10,13 @@ import {
   notification,
   Typography,
   Space,
+  Dropdown,
+  Menu,
 } from "antd";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { ToTopOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import { base_url, client_base_url } from "../App";
-import Popover from "../components/helpers/Popover";
 const { Option } = Select;
 const generateIcon = [
   <svg
@@ -50,38 +38,63 @@ const generateIcon = [
   </svg>,
 ];
 // table code start
-
 function Users() {
+  const statuses = [
+    { key: "1", label: "Неактивный", active: false },
+    { key: "2", label: "Активный", active: true },
+    { key: "3", label: "Блокировать", block: true },
+    { key: "4", label: "Разблокировать", block: false },
+  ];
+
   const columns = [
     {
-      title: "АВТОР",
+      title: "Автор",
       dataIndex: "name",
       key: "name",
       width: "32%",
+      render: (name, user) => (
+        <span onDoubleClick={() => onUserItemEdit(user, "name", "Имя")}>
+          {name}
+        </span>
+      ),
+    },
+    {
+      title: "Автор почта",
+      dataIndex: "email",
+      key: "name",
+      width: "32%",
+      render: (email, user) => (
+        <span onDoubleClick={() => onUserItemEdit(user, "email", "Почта")}>
+          {email}
+        </span>
+      ),
     },
     {
       title: "Статус",
       dataIndex: "active",
       key: "active",
-      render: (active) => (
-        <Button
-          type="text"
-          className="tag-primary"
-          style={{ color: active ? "#0E9F6E" : "red" }}
+      render: (_, user) => (
+        <Select
+          defaultValue={
+            user.active
+              ? user.block
+                ? "Блокировать"
+                : "Активный"
+              : "Неактивный"
+          }
+          onChange={(value) => onChangeUserStatus(value, user.id)}
+          style={{ width: "100%" }}
+          required
         >
-          <svg
-            viewBox="64 64 896 896"
-            focusable="false"
-            data-icon="check-circle"
-            width="14"
-            height="14"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm193.5 301.7l-210.6 292a31.8 31.8 0 01-51.7 0L318.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8 157.2-218c6-8.3 15.6-13.3 25.9-13.3H699c6.5 0 10.3 7.4 6.5 12.7z" />
-          </svg>
-          {active ? "АКТИВНЫЙ" : "НЕ АКТИВНЫЙ"}
-        </Button>
+          <Option value="" disabled>
+            Выберите Статус
+          </Option>
+          {statuses.map((status) => (
+            <Option value={JSON.stringify(status)} key={status.key}>
+              {status.label}
+            </Option>
+          ))}
+        </Select>
       ),
     },
 
@@ -93,10 +106,9 @@ function Users() {
         const year = new Date(date).getFullYear();
         const month = new Date(date).getMonth() + 1;
         const day = new Date(date).getDate();
-        const hours = new Date(date).getHours();
-        const minutes = new Date(date).getMinutes();
-        const seconds = new Date(date).getSeconds();
-        return `${hours}:${minutes}:${seconds} - ${day}.${month}.${year}`;
+        return `${year}-${month < 10 ? "0" + month : month}-${
+          day < 10 ? "0" + day : day
+        }`;
       },
     },
     {
@@ -113,7 +125,20 @@ function Users() {
       title: "Режим",
       dataIndex: "plan",
       key: "plan",
-      render: (plan) => <span key={plan.id}>{plan.name}</span>,
+      render: (plan, user) => (
+        <Select
+          value={plan.id}
+          onChange={(value) => changeUserPlan(value, user.id)}
+          style={{ width: "100%" }}
+          required
+        >
+          {plans.map((item) => (
+            <Option value={item.id} key={item.id}>
+              {item.name}
+            </Option>
+          ))}
+        </Select>
+      ),
     },
     {
       title: "Группа",
@@ -122,60 +147,155 @@ function Users() {
     },
     {
       title: "Максимальное редактирование",
-      dataIndex: "max_edit_count",
+      dataIndex: "page",
       key: "max_edit_count",
+      render: (page) => (
+        <span style={{ textAlign: "center", width: "100%", display: "block" }}>
+          {page ? page.max_edit_count : "еще не менял"}
+        </span>
+      ),
     },
     {
       title: "Отредактированное количество",
-      dataIndex: "edited_count",
+      dataIndex: "page",
       key: "edited_count",
+      render: (page) => (
+        <span style={{ textAlign: "center", width: "100%", display: "block" }}>
+          {page ? page.edited_count : "еще не менял"}
+        </span>
+      ),
     },
     {
       title: "Кол-во просмотров",
-      dataIndex: "view_count",
+      dataIndex: "page",
       key: "view_count",
+      render: (page) => (
+        <span style={{ textAlign: "center", width: "100%", display: "block" }}>
+          {page ? page.view_count : "еще не менял"}
+        </span>
+      ),
     },
     {
-      title: "Кол-во просмотров",
-      dataIndex: "max_view_count",
+      title: "Макc-ное кол-во просмотров",
+      dataIndex: "page",
       key: "max_view_count",
+      render: (page) => (
+        <span style={{ textAlign: "center", width: "100%", display: "block" }}>
+          {page ? page.max_view_count : "еще не менял"}
+        </span>
+      ),
     },
     {
       title: "Пароль на редактирование",
-      dataIndex: "password_edit",
+      dataIndex: "page",
       key: "password_edit",
+      render: (page) => (
+        <span style={{ textAlign: "center", width: "100%", display: "block" }}>
+          {page && page.password_edit !== ""
+            ? page.password_edit
+            : "еще не менял"}
+        </span>
+      ),
     },
     {
       title: "Пароль на редактирование",
-      dataIndex: "password_view",
+      dataIndex: "page",
       key: "password_view",
+      render: (page) => (
+        <span style={{ textAlign: "center", width: "100%", display: "block" }}>
+          {page && page.password_view !== ""
+            ? page.password_view
+            : "еще не менял"}
+        </span>
+      ),
+    },
+    {
+      title: "Дата начала",
+      dataIndex: "page",
+      key: "start_date",
+      render: (page) => {
+        if (!page) return <span>еще нет</span>;
+        const year = new Date(page.start_date).getFullYear();
+        const month = new Date(page.start_date).getMonth() + 1;
+        const day = new Date(page.start_date).getDate();
+        return `${year}-${month < 10 ? "0" + month : month}-${
+          day < 10 ? "0" + day : day
+        }`;
+      },
     },
     {
       title: "Срок публикации, мес.",
-      dataIndex: "end_date",
+      dataIndex: "page",
       key: "end_date",
+      render: (page) => (
+        <span style={{ textAlign: "center", width: "100%", display: "block" }}>
+          {page && page.end_date !== "" ? page.end_date : "еще не менял"}
+        </span>
+      ),
+    },
+    {
+      title: "Последний просмотр дата",
+      dataIndex: "page",
+      key: "last_view_date",
+      render: (page) => (
+        <span style={{ textAlign: "center", width: "100%", display: "block" }}>
+          {page && page.last_view_date ? page.last_view_date : "еще нет"}
+        </span>
+      ),
+    },
+    {
+      title: "Комментарий",
+      dataIndex: "page",
+      key: "comment",
+      render: (page) => (
+        <span style={{ textAlign: "center", width: "100%", display: "block" }}>
+          {page && page.comment ? page.comment : "еще нет"}
+        </span>
+      ),
     },
     {
       title: "Удалить",
       dataIndex: "id",
       key: "id",
       fixed: "right",
-
-      render: (id) => {
+      render: (_, user) => {
         return (
-          <Space>
-            <Button type="danger" onClick={() => deleteUserWithPage(id)}>
-              Удалить
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "7px 0" }}
+          >
+            <Button
+              onClick={() =>
+                deleteUser(user.id, user.page ? user.page.id : null)
+              }
+              danger
+              style={{ width: "100%" }}
+            >
+              Удалить пользователя
             </Button>
-          </Space>
+            <Button
+              disabled={user.page == null}
+              onClick={() => deleteUserPage(user.page.id)}
+              danger
+              style={{ width: "100%" }}
+            >
+              Удалить продукт
+            </Button>
+          </div>
         );
       },
     },
   ];
   const [api, contextHolder] = notification.useNotification();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [popupState, setPopupState] = useState({ visible: false, x: 0, y: 0 });
   const [plans, setPlans] = useState([]);
+  const [editInputValue, setEditInputValue] = useState("");
+  const [isEditModal, setIsEditModal] = useState(false);
+  const [editingItem, setEditingItem] = useState({
+    item: null,
+    key: null,
+    label: null,
+  });
+
   const [userData, setUserData] = useState({
     name: "",
     email: "",
@@ -204,11 +324,71 @@ function Users() {
     }
   };
 
-  const handleOk = () => {};
-  const deleteUserWithPage = (id) => {
-    console.log(id);
+  const onUserItemEdit = (item, key, label) => {
+    setEditingItem({ item, key, label });
+    setEditInputValue(item[key]);
+    setIsEditModal(true);
+  };
+  const deleteUser = async (user_id, page_id) => {
+    try {
+      if (page_id) {
+        await deleteUserPage(page_id);
+      } 
+      const response = await axios.delete(base_url + `users/${user_id}`);
+      if (response.status === 204) {
+        openNotificationWithIcon("success", "Пользователь успешно удален");
+        getUsers();
+      }
+    } catch (error) {
+      openNotificationWithIcon("error", error.response.data.message);
+    }
   };
 
+  const deleteUserPage = async (page_id) => {
+    try {
+      const response = await axios.delete(base_url + `pages/${page_id}`);
+      if (response.status === 200) {
+        openNotificationWithIcon("success", "Продукт успешно удален");
+      }
+    } catch (error) {
+      openNotificationWithIcon("error", error.response.data.message);
+    }
+  };
+  const changeUserPlan = async (planId, user_id) => {
+    try {
+      const response = await axios.patch(base_url + `users/plan/${user_id}`, {
+        planId,
+      });
+      if (response.status === 204) {
+        openNotificationWithIcon("success", "Пользователь успешно обновлен");
+        getUsers();
+      }
+    } catch (error) {
+      openNotificationWithIcon("error", error.response.data.message);
+    }
+  };
+  const onChangeUserStatus = async (status, user_id) => {
+    try {
+      const obj = { value: "", key: "" };
+      const statusObj = JSON.parse(status);
+      if (status.includes("active")) {
+        obj.key = "active";
+        obj.value = statusObj.active;
+      } else if (status.includes("block")) {
+        obj.key = "block";
+        obj.value = statusObj.block;
+      }
+      const response = await axios.patch(
+        base_url + `users/status/${user_id}`,
+        obj
+      );
+      if (response.status === 204) {
+        openNotificationWithIcon("success", "Пользователь успешно обновлен");
+      }
+    } catch (error) {
+      openNotificationWithIcon("error", error.response.data.message);
+    }
+  };
   const handleSaveUser = async () => {
     try {
       const pattern = /^[!@#$%^&*]{2}[\w\d]{2,}\d{3}$/;
@@ -216,20 +396,22 @@ function Users() {
       if (
         userData.name.trim() === "" ||
         userData.email.trim() === "" ||
-        userData.password.trim() === "" ||
         userData.planId === ""
       ) {
         setError("Все поля должны быть заполнены.");
-      } else if (!pattern.test(userData.password)) {
+      } else if (
+        userData.password.length > 0 &&
+        !pattern.test(userData.password)
+      ) {
         setError(
           "Пароль должен начинаться с двух символов и содержать не менее 5 символов, после чего 3 числа в конце."
         );
       } else {
         setError("");
-        const response = await axios.post(
-          "http://localhost:8080/api/auth/sign_up",
-          userData
-        );
+        const response = await axios.post(base_url + "auth/sign_up", {
+          ...userData,
+          password: userData.password === "" ? null : userData.password,
+        });
         if (response.status === 201) {
           getUsers();
           setUserData({
@@ -246,7 +428,17 @@ function Users() {
       openNotificationWithIcon("error", error.response.data.message);
     }
   };
-
+  const handleEditUser = async () => {
+    const response = await axios.put(
+      base_url + `users/${editingItem.item.id}`,
+      { ...editingItem.item, [editingItem.key]: editInputValue }
+    );
+    if (response.status === 201) {
+      openNotificationWithIcon("success", "Пользователь успешно обновлен");
+      setIsEditModal(false);
+      getUsers();
+    }
+  };
   const generateLink = () => {
     setUserData({ ...userData, url: uuidv4() });
   };
@@ -268,13 +460,32 @@ function Users() {
       </Button>
       <Modal
         footer={
+          <Button type="primary" onClick={handleEditUser}>
+            Сохранять
+          </Button>
+        }
+        open={isEditModal}
+        onCancel={() => setIsEditModal(false)}
+      >
+        <div>
+          <Typography.Title level={5}>{editingItem.label}</Typography.Title>
+          <Input
+            placeholder={editingItem.label}
+            value={editInputValue}
+            type="text"
+            onChange={(e) => setEditInputValue(e.target.value)}
+            required
+          />
+        </div>
+      </Modal>
+      <Modal
+        footer={
           <Button type="primary" onClick={handleSaveUser}>
             Создать
           </Button>
         }
         title={"Создать пользователя"}
-        visible={isModalOpen}
-        onOk={handleOk}
+        open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
@@ -340,7 +551,9 @@ function Users() {
               placeholder="Выберите режим"
               required
             >
-              <Option value="" disabled >Выберите режим</Option>
+              <Option value="" disabled>
+                Выберите режим
+              </Option>
               {plans.map((plan) => (
                 <Option value={plan.id} key={plan.id}>
                   {plan.name}

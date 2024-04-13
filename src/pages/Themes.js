@@ -95,9 +95,9 @@ const Themes = () => {
 
   const columns = [
     {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
+      title: "Имя",
+      dataIndex: "name",
+      key: "name",
     },
     {
       title: "Цвет текста",

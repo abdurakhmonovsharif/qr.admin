@@ -166,23 +166,7 @@ const data = [
   },
 ];
 
-const menu = (
-  <List
-    min-width="100%"
-    className="header-notifications-dropdown "
-    itemLayout="horizontal"
-    dataSource={data}
-    renderItem={(item) => (
-      <List.Item>
-        <List.Item.Meta
-          avatar={<Avatar shape="square" src={item.avatar} />}
-          title={item.title}
-          description={item.description}
-        />
-      </List.Item>
-    )}
-  />
-);
+
 
 const logsetting = [
   <svg
@@ -233,15 +217,11 @@ const toggler = [
 ];
 
 function Header({
-  placement,
   name,
   subName,
   onPress,
-  handleSidenavColor,
-  handleSidenavType,
-  handleFixedNavbar,
 }) {
-  const { Title, Text } = Typography;
+
 
   const [visible, setVisible] = useState(false);
   const [sidenavType, setSidenavType] = useState("transparent");
@@ -273,20 +253,6 @@ function Header({
           </div>
         </Col>
         <Col span={24} md={18} className="header-control">
-          <Badge size="small" count={4}>
-            <Dropdown overlay={menu} trigger={["click"]}>
-              <a
-                href="#pablo"
-                className="ant-dropdown-link"
-                onClick={(e) => e.preventDefault()}
-              >
-                {bell}
-              </a>
-            </Dropdown>
-          </Badge>
-          <Button type="link" onClick={showDrawer}>
-            {logsetting}
-          </Button>
           <Button
             type="link"
             className="sidebar-toggler"
@@ -294,11 +260,6 @@ function Header({
           >
             {toggler}
           </Button>
-
-          <Link to="/sign-in" className="btn-sign-in">
-            {profile}
-            <span>Sign in</span>
-          </Link>
           {pathname.includes("users") && (
             <Input
               className="header-search"

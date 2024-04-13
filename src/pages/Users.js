@@ -9,15 +9,13 @@ import {
   Select,
   notification,
   Typography,
-  Space,
-  Dropdown,
-  Menu,
 } from "antd";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { base_url, client_base_url } from "../App";
 const { Option } = Select;
+const { TextArea } = Input;
 const generateIcon = [
   <svg
     width="15"
@@ -58,15 +56,43 @@ function Users() {
         </span>
       ),
     },
+
     {
-      title: "Автор почта",
-      dataIndex: "email",
-      key: "name",
-      width: "32%",
-      render: (email, user) => (
-        <span onDoubleClick={() => onUserItemEdit(user, "email", "Почта")}>
-          {email}
-        </span>
+      title: "Дата создания",
+      dataIndex: "created_at",
+      key: "created_at",
+      render: (date) => {
+        const year = new Date(date).getFullYear();
+        const month = new Date(date).getMonth() + 1;
+        const day = new Date(date).getDate();
+        return `${year}-${month < 10 ? "0" + month : month}-${
+          day < 10 ? "0" + day : day
+        }`;
+      },
+    },
+
+    {
+      title: "Дата начала",
+      dataIndex: "page",
+      key: "start_date",
+      render: (page) => {
+        if (!page) return <span>еще нет</span>;
+        const year = new Date(page.start_date).getFullYear();
+        const month = new Date(page.start_date).getMonth() + 1;
+        const day = new Date(page.start_date).getDate();
+        return `${year}-${month < 10 ? "0" + month : month}-${
+          day < 10 ? "0" + day : day
+        }`;
+      },
+    },
+    {
+      title: "Ссылка",
+      dataIndex: "url",
+      key: "url",
+      render: (url) => (
+        <a target="_blank" href={client_base_url + "ws/" + url}>
+          {url}
+        </a>
       ),
     },
     {
@@ -97,29 +123,25 @@ function Users() {
         </Select>
       ),
     },
-
     {
-      title: "Дата регистрации",
-      dataIndex: "created_at",
-      key: "created_at",
-      render: (date) => {
-        const year = new Date(date).getFullYear();
-        const month = new Date(date).getMonth() + 1;
-        const day = new Date(date).getDate();
-        return `${year}-${month < 10 ? "0" + month : month}-${
-          day < 10 ? "0" + day : day
-        }`;
+      title: "Дата активации",
+      dataIndex: "active_at",
+      key: "active_at",
+      render: (active_at) => {
+        if (!active_at) return <span>еще нет</span>;
+        const year = new Date(active_at).getFullYear();
+        const month = new Date(active_at).getMonth() + 1;
+        const day = new Date(active_at).getDate();
+        return (
+          <span
+            style={{ display: "block", width: "100%", textAlign: "center" }}
+          >
+            {`${year}-${month < 10 ? "0" + month : month}-${
+              day < 10 ? "0" + day : day
+            }`}
+          </span>
+        );
       },
-    },
-    {
-      title: "Ссылка",
-      dataIndex: "url",
-      key: "url",
-      render: (url) => (
-        <a target="_blank" href={client_base_url + "ws/" + url}>
-          {url}
-        </a>
-      ),
     },
     {
       title: "Режим",
@@ -134,12 +156,23 @@ function Users() {
         >
           {plans.map((item) => (
             <Option value={item.id} key={item.id}>
-              {item.name}
+              {item.nameRu}
             </Option>
           ))}
         </Select>
       ),
     },
+    {
+      title: "Тема",
+      dataIndex: "page",
+      key: "page",
+      render: (page) => (
+        <span style={{ display: "block", textAlign: "center" }}>
+          {page?.theme?.name}
+        </span>
+      ),
+    },
+
     {
       title: "Группа",
       dataIndex: "group",
@@ -198,7 +231,7 @@ function Users() {
       ),
     },
     {
-      title: "Пароль на редактирование",
+      title: "Пароль на просмотр",
       dataIndex: "page",
       key: "password_view",
       render: (page) => (
@@ -209,19 +242,16 @@ function Users() {
         </span>
       ),
     },
+
     {
-      title: "Дата начала",
+      title: "Размер макс, Кбайт",
       dataIndex: "page",
-      key: "start_date",
-      render: (page) => {
-        if (!page) return <span>еще нет</span>;
-        const year = new Date(page.start_date).getFullYear();
-        const month = new Date(page.start_date).getMonth() + 1;
-        const day = new Date(page.start_date).getDate();
-        return `${year}-${month < 10 ? "0" + month : month}-${
-          day < 10 ? "0" + day : day
-        }`;
-      },
+      key: "size",
+      render: (page) => (
+        <span style={{ textAlign: "center", width: "100%", display: "block" }}>
+          {page && page.size !== "" ? page.size + " KB" : "еще нет"}
+        </span>
+      ),
     },
     {
       title: "Срок публикации, мес.",
@@ -237,19 +267,54 @@ function Users() {
       title: "Последний просмотр дата",
       dataIndex: "page",
       key: "last_view_date",
-      render: (page) => (
-        <span style={{ textAlign: "center", width: "100%", display: "block" }}>
-          {page && page.last_view_date ? page.last_view_date : "еще нет"}
-        </span>
-      ),
+      render: (page) => {
+        if (!page?.last_view_date) return <span>еще не просмотрено</span>;
+        const year = new Date(page.last_view_date).getFullYear();
+        const month = new Date(page.last_view_date).getMonth() + 1;
+        const day = new Date(page.last_view_date).getDate();
+        return (
+          <span
+            style={{ textAlign: "center", width: "100%", display: "block" }}
+          >{`${year}-${month < 10 ? "0" + month : month}-${
+            day < 10 ? "0" + day : day
+          }`}</span>
+        );
+      },
+    },
+    {
+      title: "Дата последнего редактирования",
+      dataIndex: "page",
+      key: "updated_at",
+      render: (page) => {
+        if (!page) return <span>еще нет</span>;
+        const year = new Date(page.updated_at).getFullYear();
+        const month = new Date(page.updated_at).getMonth() + 1;
+        const day = new Date(page.updated_at).getDate();
+        return (
+          <span
+            style={{ textAlign: "center", width: "100%", display: "block" }}
+          >{`${year}-${month < 10 ? "0" + month : month}-${
+            day < 10 ? "0" + day : day
+          }`}</span>
+        );
+      },
     },
     {
       title: "Комментарий",
-      dataIndex: "page",
+      dataIndex: "comment",
       key: "comment",
-      render: (page) => (
-        <span style={{ textAlign: "center", width: "100%", display: "block" }}>
-          {page && page.comment ? page.comment : "еще нет"}
+      render: (_, user) => (
+        <span
+          onDoubleClick={() =>
+            onUserItemEdit(user, "comment", "Оставить комментарий")
+          }
+          style={{
+            textAlign: "center",
+            width: "100%",
+            display: "block",
+          }}
+        >
+          {user && user.comment ? user.comment : "еще нет"}
         </span>
       ),
     },
@@ -298,7 +363,6 @@ function Users() {
 
   const [userData, setUserData] = useState({
     name: "",
-    email: "",
     password: "",
     url: "",
     planId: "",
@@ -325,15 +389,17 @@ function Users() {
   };
 
   const onUserItemEdit = (item, key, label) => {
+    console.log(item);
     setEditingItem({ item, key, label });
     setEditInputValue(item[key]);
     setIsEditModal(true);
   };
+
   const deleteUser = async (user_id, page_id) => {
     try {
       if (page_id) {
         await deleteUserPage(page_id);
-      } 
+      }
       const response = await axios.delete(base_url + `users/${user_id}`);
       if (response.status === 204) {
         openNotificationWithIcon("success", "Пользователь успешно удален");
@@ -349,6 +415,7 @@ function Users() {
       const response = await axios.delete(base_url + `pages/${page_id}`);
       if (response.status === 200) {
         openNotificationWithIcon("success", "Продукт успешно удален");
+        getUsers();
       }
     } catch (error) {
       openNotificationWithIcon("error", error.response.data.message);
@@ -393,11 +460,7 @@ function Users() {
     try {
       const pattern = /^[!@#$%^&*]{2}[\w\d]{2,}\d{3}$/;
 
-      if (
-        userData.name.trim() === "" ||
-        userData.email.trim() === "" ||
-        userData.planId === ""
-      ) {
+      if (userData.name.trim() === "" || userData.planId === "") {
         setError("Все поля должны быть заполнены.");
       } else if (
         userData.password.length > 0 &&
@@ -410,12 +473,12 @@ function Users() {
         setError("");
         const response = await axios.post(base_url + "auth/sign_up", {
           ...userData,
+          url: uuidv4(),
           password: userData.password === "" ? null : userData.password,
         });
         if (response.status === 201) {
           getUsers();
           setUserData({
-            email: "",
             name: "",
             password: "",
             planId: "",
@@ -425,24 +488,43 @@ function Users() {
         }
       }
     } catch (error) {
-      openNotificationWithIcon("error", error.response.data.message);
+      if (error?.response?.data?.message) {
+        openNotificationWithIcon("error", error.response.data.message);
+      }
     }
   };
   const handleEditUser = async () => {
-    const response = await axios.put(
-      base_url + `users/${editingItem.item.id}`,
-      { ...editingItem.item, [editingItem.key]: editInputValue }
-    );
-    if (response.status === 201) {
-      openNotificationWithIcon("success", "Пользователь успешно обновлен");
-      setIsEditModal(false);
-      getUsers();
+    try {
+      const response = await axios.put(
+        base_url + `users/${editingItem.item.id}`,
+        { ...editingItem.item, [editingItem.key]: editInputValue }
+      );
+      if (response.status === 201) {
+        openNotificationWithIcon("success", "Пользователь успешно обновлен");
+        setIsEditModal(false);
+        setEditingItem({ item: null, key: null, label: null });
+        getUsers();
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
-  const generateLink = () => {
-    setUserData({ ...userData, url: uuidv4() });
+  const handleEditComment = async () => {
+    try {
+      const response = await axios.patch(
+        base_url + `users/comment/${editingItem.item.id}`,
+        { comment: editInputValue }
+      );
+      if (response.status === 204) {
+        openNotificationWithIcon("success", "Пользователь успешно обновлен");
+        setIsEditModal(false);
+        setEditingItem({ item: null, key: null, label: null });
+        getUsers();
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
-
   const openNotificationWithIcon = (type, message) => {
     api[type]({
       message,
@@ -460,7 +542,12 @@ function Users() {
       </Button>
       <Modal
         footer={
-          <Button type="primary" onClick={handleEditUser}>
+          <Button
+            type="primary"
+            onClick={
+              editingItem.key === "comment" ? handleEditComment : handleEditUser
+            }
+          >
             Сохранять
           </Button>
         }
@@ -469,13 +556,23 @@ function Users() {
       >
         <div>
           <Typography.Title level={5}>{editingItem.label}</Typography.Title>
-          <Input
-            placeholder={editingItem.label}
-            value={editInputValue}
-            type="text"
-            onChange={(e) => setEditInputValue(e.target.value)}
-            required
-          />
+          {editingItem.key === "comment" ? (
+            <TextArea
+              placeholder={editingItem.label}
+              value={editInputValue}
+              type="text"
+              onChange={(e) => setEditInputValue(e.target.value)}
+              required
+            />
+          ) : (
+            <Input
+              placeholder={editingItem.label}
+              value={editInputValue}
+              type="text"
+              onChange={(e) => setEditInputValue(e.target.value)}
+              required
+            />
+          )}
         </div>
       </Modal>
       <Modal
@@ -502,18 +599,6 @@ function Users() {
             />
           </div>
           <div>
-            <Typography.Title level={5}>Электронная почта</Typography.Title>
-            <Input
-              placeholder="Электронная почта"
-              type="email"
-              value={userData.email}
-              onChange={(e) =>
-                setUserData({ ...userData, email: e.target.value })
-              }
-              required
-            />
-          </div>
-          <div>
             <Typography.Title level={5}>Пароль</Typography.Title>
             <Input
               placeholder="Пароль"
@@ -526,23 +611,6 @@ function Users() {
             {error && <Typography.Text type="danger">{error}</Typography.Text>}
           </div>
           <div>
-            <Typography.Title level={5}>Ссылка</Typography.Title>
-            <div style={{ display: "flex", gap: "5px" }}>
-              <Input
-                placeholder="Ссылка"
-                value={userData.url}
-                readOnly
-                disabled
-                onChange={(e) =>
-                  setUserData({ ...userData, link: e.target.value })
-                }
-              />
-              <Button type="ghost" onClick={generateLink}>
-                {generateIcon[0]}
-              </Button>
-            </div>
-          </div>
-          <div>
             <Typography.Title level={5}>Режим</Typography.Title>
             <Select
               value={userData.planId}
@@ -551,12 +619,12 @@ function Users() {
               placeholder="Выберите режим"
               required
             >
-              <Option value="" disabled>
+              <Option value="" key={"disabled"} disabled>
                 Выберите режим
               </Option>
               {plans.map((plan) => (
                 <Option value={plan.id} key={plan.id}>
-                  {plan.name}
+                  {plan.nameRu}
                 </Option>
               ))}
             </Select>
